@@ -48,7 +48,7 @@ mongodb_conf_quota: no                            # Limits each database to a ce
 mongodb_conf_quotaFiles: 8                        # Number of quota files
 mongodb_conf_syslog: no                           # Log to system's syslog facility instead of file (ignored if logpath set)
 mongodb_conf_smallfiles: yes                      # Sets MongoDB to use a smaller default file size
-mongodb_conf_profile: 1                           # Sets level of profiling information
+mongodb_conf_profile: slowOp                      # Sets level of profiling information (off/slowOp/all)
 mongodb_conf_slowms: 250                          # Sets threshold for operation to be considered slow
 mongodb_conf_net_ssl_mode: allowSSL
 mongodb_conf_net_ssl_pem_file: /etc/ssl/private/ssl-cert-snakeoil.key
