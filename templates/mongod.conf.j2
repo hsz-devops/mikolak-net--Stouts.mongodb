@@ -1,30 +1,157 @@
 # {{ ansible_managed }}
 
-auth = {{ mongodb_conf_auth|to_nice_json|bool|lower }}
-bind_ip = {{ mongodb_conf_bind_ip }}
-cpu = {{ mongodb_conf_cpu|to_nice_json|bool|lower }}
-dbpath = {{ mongodb_conf_dbpath }}
-fork = {{ mongodb_conf_fork|to_nice_json|bool|lower }}
-httpinterface = {{ mongodb_conf_httpinterface|to_nice_json|bool|lower }}
-ipv6 = {{ mongodb_conf_ipv6|to_nice_json|bool|lower }}
-journal = {{ mongodb_conf_journal|to_nice_json|bool|lower }}
-logappend = {{ mongodb_conf_logappend|to_nice_json|bool|lower }}
-logpath = {{ mongodb_conf_logpath }}
-maxConns = {{ mongodb_conf_maxConns|int }}
-noprealloc = {{ mongodb_conf_noprealloc|to_nice_json|bool|lower }}
-noscripting = {{ mongodb_conf_noscripting|to_nice_json|bool|lower }}
-notablescan = {{ mongodb_conf_notablescan|to_nice_json|bool|lower }}
-port = {{ mongodb_conf_port|int }}
-quota = {{ mongodb_conf_quota|to_nice_json|bool|lower }}
+# This file is in v2.6+ new yaml configuration format
+#
+# https://docs.mongodb.org/manual/reference/configuration-options/
+# Please read the reference before enabling settings
+#
+# Only tested for 3.0 and 3.2
+#
+
+security:
+    #keyFile: <string>
+    #clusterAuthMode: <string>
+    authorization: {{ mongodb_conf_auth|to_nice_json|bool |ternary("enabled", "disabled") }}
+    javascriptEnabled: {{ (not (mongodb_conf_noscripting|to_nice_json|bool)) |lower }}
+    #sasl:
+      #hostName: <string>
+      #serviceName: <string>
+      #saslauthdSocketPath: <string>
+    #enableEncryption: <boolean>
+    #encryptionCipherMode: <string>
+    #encryptionKeyFile: <string>
+    #kmip:
+      #keyIdentifier: <string>
+      #rotateMasterKey: <boolean>
+      #serverName: <string>
+      #port: <string>
+      #clientCertificateFile: <string>
+      #clientCertificatePassword: <string>
+      #serverCAFile: <string>
+
+systemLog:
+   verbosity: 0
+   quiet: false
+   traceAllExceptions: false
+   syslogFacility: user
+   path: {{ mongodb_conf_logpath }}
+   logAppend: {{ mongodb_conf_logappend|to_nice_json|bool|lower }}
+   logRotate: reopen
+{% if (mongodb_conf_logpath == '') and (mongodb_conf_syslog |bool) %}
+   destination: syslog
+{% else %}
+   destination: file
+{% endif %}
+   timeStampFormat: iso8601-utc
+   component:
+      accessControl:
+         verbosity: 0
+      command:
+         verbosity: 0
+      control:
+         verbosity: 0
+      geo:
+         verbosity: 0
+      index:
+         verbosity: 0
+      network:
+         verbosity: 0
+      query:
+         verbosity: 0
+      sharding:
+         verbosity: 0
+      storage:
+         verbosity: 0
+         journal:
+            verbosity: 0
+      write:
+         verbosity: 0
+
+processManagement:
+   fork: {{ mongodb_conf_fork|to_nice_json|bool|lower }}
+    #pidFilePath: <string>
+
+net:
+   port: {{ mongodb_conf_port|int }}
+   bindIp: {{ mongodb_conf_bind_ip }}
+   maxIncomingConnections: {{ mongodb_conf_maxConns|int }}
+   #wireObjectCheck: true
+   ipv6: {{ mongodb_conf_ipv6|to_nice_json|bool|lower }}
+   #unixDomainSocket:
+      #enabled: <boolean>
+      #pathPrefix: <string>
+      #filePermissions: <int>
+   http:
+      enabled: {{ mongodb_conf_httpinterface|to_nice_json|bool|lower }}
+      JSONPEnabled: {{ mongodb_conf_http_jsonp|to_nice_json|bool|lower }}
+      RESTInterfaceEnabled: {{ mongodb_conf_http_rest|to_nice_json|bool|lower }}
+   ssl:
+      #sslOnNormalPorts: <boolean>  # deprecated since 2.6
+      mode: {{ mongodb_conf_net_ssl_mode }}
+      PEMKeyFile: {{ mongodb_conf_net_ssl_pem_file }}
+      #PEMKeyPassword: <string>
+      #clusterFile: <string>
+      #clusterPassword: <string>
+      #CAFile: <string>
+      #CRLFile: <string>
+      allowConnectionsWithoutCertificates: true
+      allowInvalidCertificates: false
+      allowInvalidHostnames: false
+      disabledProtocols: TLS1_0,TLS1_1
+      #FIPSMode: <boolean>
+
+storage:
+   dbPath: {{ mongodb_conf_dbpath }}
+   #indexBuildRetry: <boolean>
+   #repairPath: <string>
+   journal:
+      enabled: {{ mongodb_conf_journal|to_nice_json|bool|lower }}
+      #commitIntervalMs: <num>
+   directoryPerDB: true
+   #syncPeriodSecs: <int>
+
+   engine: mmapv1
+
+   mmapv1:
+      preallocDataFiles: {{ (not (mongodb_conf_noprealloc|to_nice_json|bool)) |lower }}
+      #nsSize: <int>
+      quota:
+         enforced: {{ mongodb_conf_quota|to_nice_json|bool|lower }}
 {% if mongodb_conf_quota %}
-quotaFiles = {{ mongodb_conf_quotaFiles|int }}
+         maxFilesPerDB: {{ mongodb_conf_quotaFiles |int }}
 {% endif %}
-{% if mongodb_conf_logpath == '' %}
-syslog = {{ mongodb_conf_syslog|to_nice_json|bool|lower }}
-{% endif %}
-smallfiles = {{ mongodb_conf_smallfiles|to_nice_json|bool|lower }}
+      smallFiles: {{ mongodb_conf_smallfiles|to_nice_json|bool|lower }}
+      #journal:
+         #debugFlags: <int>
+         #commitIntervalMs: <num>            # Deprecated since version 3.2
+   wiredTiger:
+      engineConfig:
+         #cacheSizeGB: <number>
+         #statisticsLogDelaySecs: <number>
+         journalCompressor: snappy
+         directoryForIndexes: true
+      collectionConfig:
+         blockCompressor: snappy
+      indexConfig:
+         prefixCompression: true
+
+operationProfiling:
+   slowOpThresholdMs: {{ mongodb_conf_slowms |int }}
+   mode: {{ mongodb_conf_profile }}
+
+setParameter:
+   enableLocalhostAuthBypass: false
+   sslMode: preferSSL
+   loglevel: 0
+   #logUserIds: 1
+   #auditAuthorizationSuccess: 1
+
 {% if mongodb_conf_replSet %}
-# Replica set options:
-replSet = {{ mongodb_conf_replSet }}
-replIndexPrefetch = {{ mongodb_conf_replIndexPrefetch }}
+replication:
+   #oplogSizeMB: <int>
+   replSetName: {{ mongodb_conf_replSet }}
+   secondaryIndexPrefetch: {{ mongodb_conf_replIndexPrefetch }}
+   #enableMajorityReadConcern: <boolean>
 {% endif %}
+
+
