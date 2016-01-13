@@ -30,7 +30,7 @@ security:
       #serverCAFile: <string>
 
 systemLog:
-   verbosity: 0
+   verbosity: 1
    quiet: false
    traceAllExceptions: false
    syslogFacility: user
@@ -75,7 +75,7 @@ net:
    port: {{ mongodb_conf_port|int }}
    bindIp: {{ mongodb_conf_bind_ip }}
    maxIncomingConnections: {{ mongodb_conf_maxConns|int }}
-   #wireObjectCheck: true
+   wireObjectCheck: true
    ipv6: {{ mongodb_conf_ipv6|to_nice_json|bool|lower }}
    #unixDomainSocket:
       #enabled: <boolean>
@@ -87,12 +87,12 @@ net:
       RESTInterfaceEnabled: {{ mongodb_conf_http_rest|to_nice_json|bool|lower }}
    ssl:
       #sslOnNormalPorts: <boolean>  # deprecated since 2.6
-      mode: {{ mongodb_conf_net_ssl_mode }}
-      PEMKeyFile: {{ mongodb_conf_net_ssl_pem_file }}
+      mode: {{ mongodb_conf_net_ssl_mode |default('preferSSL') }}
+      PEMKeyFile: {{ mongodb_conf_net_ssl_pem_file |default(omit) }}
       #PEMKeyPassword: <string>
       #clusterFile: <string>
       #clusterPassword: <string>
-      #CAFile: <string>
+      CAFile: {{ mongodb_conf_net_ssl_self_signed |bool |ternary(mongodb_conf_net_ssl_pem_file,mongodb_conf_net_ssl_ca_file) }}
       #CRLFile: <string>
       allowConnectionsWithoutCertificates: true
       allowInvalidCertificates: false

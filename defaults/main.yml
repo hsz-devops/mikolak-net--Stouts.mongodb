@@ -50,8 +50,6 @@ mongodb_conf_syslog: no                           # Log to system's syslog facil
 mongodb_conf_smallfiles: yes                      # Sets MongoDB to use a smaller default file size
 mongodb_conf_profile: slowOp                      # Sets level of profiling information (off/slowOp/all)
 mongodb_conf_slowms: 250                          # Sets threshold for operation to be considered slow
-mongodb_conf_net_ssl_mode: allowSSL
-mongodb_conf_net_ssl_pem_file: /etc/ssl/private/ssl-cert-snakeoil.key
 
 # Replica set options:
 mongodb_conf_replSet:                             # Enable replication <setname>[/<optionalseedhostlist>]
